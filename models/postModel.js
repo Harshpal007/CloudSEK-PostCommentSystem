@@ -15,15 +15,16 @@ class Post {
     }
   }
 
+  //getting a Post based on it's  postID along with all it's comments
   static async getPostById(req, res) {
     const { userId, postId } = req.body;
     try {
-      const mainPostResult = await db.query('SELECT * FROM posts WHERE id = $1 AND userid = $2', [postId, userId]);
+      const mainPostResult = await db.query('SELECT * FROM posts WHERE id = $1 ', [postId]);
       if (mainPostResult.rows.length === 0) {
         res.status(404).json({ error: 'Post not found' });
       } else {
         const mainPost = mainPostResult.rows[0];
-        const commentsResult = await db.query('SELECT * FROM comments WHERE postid = $1 AND userid =$2 ORDER BY path', [postId,userId]);
+        const commentsResult = await db.query('SELECT * FROM comments WHERE postid = $1 ORDER BY path', [postId]);
         const comments = commentsResult.rows;
         res.json({ mainPost, comments });
       }
