@@ -4,16 +4,18 @@ class Comment {
   static async addComment(req, res) {
     //Using Tree Structure to store comments
     const { content, userId, parentCommentId, postId } = req.body;
-    let path
+    try {
+      let path
       const result = parentCommentId ? await db.query(
-        `SELECT COUNT(*) AS num_comments FROM comments WHERE parentcommentid = $1`,
+        `SELECT COUNT(*) AS num_comments FROM comments WHERE parentcommentid = $1 AND postid =${postId}`,
         [parentCommentId]
       ):
         await db.query(
-          `SELECT COUNT(*) AS num_comments FROM comments WHERE parentcommentid IS NULL`
+          `SELECT COUNT(*) AS num_comments FROM comments WHERE parentcommentid IS NULL AND postid =${postId}`
         );
       console.log(result.rows[0].num_comments);
       const numComments = parseInt(result.rows[0].num_comments) + 1;
+      console.log(numComments);
       if(parentCommentId){
         const parentResult = await db.query(
           `SELECT path FROM comments WHERE id = $1`,
@@ -25,13 +27,13 @@ class Comment {
       else{
         path =`${numComments}`
       }
-    try {
+    
       //Here the path variable is ltree datatype of postgres which provides hierichal data storage
-      const result = await db.query(
+      const queryResult = await db.query(
         `INSERT INTO comments (content, userid, path, postid, parentcommentid) VALUES ($1, $2, $3, $4, $5) RETURNING *`,
         [content, userId, path, postId,parentCommentId]
       );
-      res.status(201).json(result.rows[0]);
+      res.status(201).json(queryResult.rows[0]);
     } catch (err) {
       console.error('Error adding comment', err);
       res.status(500).json({ error: 'Error adding comment' });
