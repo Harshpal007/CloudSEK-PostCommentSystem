@@ -2,6 +2,7 @@ const db = require('../db');
 
 class Comment {
   static async addComment(req, res) {
+    //Using Tree Structure to store comments
     const { content, userId, parentCommentId, postId } = req.body;
     let path
       const result = parentCommentId ? await db.query(
@@ -13,7 +14,6 @@ class Comment {
         );
       console.log(result.rows[0].num_comments);
       const numComments = parseInt(result.rows[0].num_comments) + 1;
-      console.log(numComments);
       if(parentCommentId){
         const parentResult = await db.query(
           `SELECT path FROM comments WHERE id = $1`,
@@ -26,7 +26,7 @@ class Comment {
         path =`${numComments}`
       }
     try {
-      console.log("path",path);
+      //Here the path variable is ltree datatype of postgres which provides hierichal data storage
       const result = await db.query(
         `INSERT INTO comments (content, userid, path, postid, parentcommentid) VALUES ($1, $2, $3, $4, $5) RETURNING *`,
         [content, userId, path, postId,parentCommentId]
